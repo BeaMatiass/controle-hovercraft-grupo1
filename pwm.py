@@ -1,100 +1,57 @@
 #!/usr/bin/env python3
-import time
 import rospy
 from std_msgs.msg import Float32
 import pigpio
+import os
+import sys
 
-GPIO_PWM_THROTTLE = 12
-GPIO_PWM_LIFT = 13
-PERIODO = 0.02  # 20 ms
+gpio_throttle = 12
+gpio_lift = 13
+gpio_servo = 18
 
-throttle = 0.0
+pwm_value_dist = 0.0
+pwm_value_servo = 0.0
+pi = None
 
+def clamp(value, lower, upper):
+    return max(lower, min(value, upper))
 
-def callback_velocidade_linear(msg):
-    global throttle
-    throttle = float(msg.data)
+def pwm_loop(_event):
+    global pi
 
+    if pi is None:
+        return
 
-def calibrar(pi, pin):
-    for _ in range(250):
-        pi.write(pin, 1)
-        time.sleep(0.002)
-        pi.write(pin, 0)
-        time.sleep(0.018)
+    duty_cycle_throttle = int(clamp(pwm_value_dist, 0.0, 1.0) * 1000 + 1000)  # [0,1] -> [1000,2000]
+    pi.set_servo_pulsewidth(gpio_throttle, duty_cycle_throttle)
 
-    for _ in range(250):
-        pi.write(pin, 1)
-        time.sleep(0.001)
-        pi.write(pin, 0)
-        time.sleep(0.019)
-
-
-def pwm_loop(pi, pub_pwm):
-    global throttle
-
-    while not rospy.is_shutdown():
-        duty_throttle = 5.0 + (throttle * 0.05)
-        duty_throttle = max(5.0, min(10.0, duty_throttle))
-
-        duty_lift = 10.0
-
-        high_throttle = (duty_throttle / 100.0) * PERIODO
-        high_lift = (duty_lift / 100.0) * PERIODO
-
-        t0 = time.time()
-        end_throttle = t0 + high_throttle
-        end_lift = t0 + high_lift
-        end_period = t0 + PERIODO
-
-        pi.write(GPIO_PWM_THROTTLE, 1)
-        pi.write(GPIO_PWM_LIFT, 1)
-
-        while True:
-            now = time.time()
-
-            if now >= end_throttle and pi.read(GPIO_PWM_THROTTLE) == 1:
-                pi.write(GPIO_PWM_THROTTLE, 0)
-
-            if now >= end_lift and pi.read(GPIO_PWM_LIFT) == 1:
-                pi.write(GPIO_PWM_LIFT, 0)
-
-            if now >= end_period:
-                break
-
-            time.sleep(0.0005)
-
-        if pub_pwm is not None:
-            pub_pwm.publish(duty_throttle)
-
-
-def on_shutdown(pi):
-    pi.write(GPIO_PWM_THROTTLE, 0)
-    pi.write(GPIO_PWM_LIFT, 0)
-    pi.stop()
-
+    duty_cycle_servo = int(clamp(pwm_value_servo, -1.0, 1.0) * 400 + 1500)
+    pi.set_servo_pulsewidth(gpio_servo, duty_cycle_servo)
 
 if __name__ == "__main__":
     rospy.init_node("hover_pwm")
 
+    os.system("pigpiod")
+
     pi = pigpio.pi()
+
     if not pi.connected:
-        rospy.logerr("Nao foi possivel conectar ao pigpiod.")
-        exit(1)
+        rospy.logerr("Não foi possível conectar ao daemon pigpiod.")
+        sys.exit(1)
 
-    pi.set_mode(GPIO_PWM_THROTTLE, pigpio.OUTPUT)
-    pi.set_mode(GPIO_PWM_LIFT, pigpio.OUTPUT)
+    def callback_pid_dist(msg):
+        global pwm_value_dist
+        pwm_value_dist = msg.data
 
-    calibrar(pi, GPIO_PWM_THROTTLE)
-    calibrar(pi, GPIO_PWM_LIFT)
+    def callback_pid_servo(msg):
+        global pwm_value_servo
+        pwm_value_servo = msg.data
 
-    pub_pwm = rospy.Publisher("/pwm/throttle", Float32, queue_size=1)
+    rospy.Subscriber("/pid/throttle", Float32, callback_pid_dist, queue_size=1)
+    rospy.Subscriber("/pid/servo", Float32, callback_pid_servo, queue_size=1)
 
-    rospy.Subscriber("/speed/velocidade_linear", Float32, callback_velocidade_linear, queue_size=1)
+    rospy.Timer(rospy.Duration(0.02), pwm_loop)
 
-    rospy.on_shutdown(lambda: on_shutdown(pi))
+    rospy.on_shutdown(pi.stop)
 
-    try:
-        pwm_loop(pi, pub_pwm)
-    except rospy.ROSInterruptException:
-        pass
+    rospy.spin()

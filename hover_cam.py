@@ -37,7 +37,11 @@ def funcao_callback(image):
     
     # Se houver objeto vermelho na tela, publica suas informações
     if(num_pixels > min_pixels): 
-        
+
+        if M['m00'] == 0:
+            rospy.logwarn_throttle(5, "Máscara vermelha detectada, mas momentos inválidos (m00 == 0)")
+            return
+
         cx = int(M['m10']/M['m00'])
         dx = cx - (width // 2)
         tamanho_atual = num_pixels / (height * width)
