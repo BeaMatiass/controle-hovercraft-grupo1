@@ -13,6 +13,8 @@ pwm_value_dist = 0.0
 pwm_value_servo = 0.0
 pi = None
 
+# O clamp ja é feito na própria lógica do PID, mas achei interessante deixar aqui just in case
+
 def clamp(value, lower, upper):
     return max(lower, min(value, upper))
 
@@ -25,8 +27,11 @@ def pwm_loop(_event):
     duty_cycle_throttle = int(clamp(pwm_value_dist, 0.0, 1.0) * 1000 + 1000)  # [0,1] -> [1000,2000]
     pi.set_servo_pulsewidth(gpio_throttle, duty_cycle_throttle)
 
-    duty_cycle_servo = int(clamp(pwm_value_servo, -1.0, 1.0) * 400 + 1500)
+    duty_cycle_servo = int(clamp(pwm_value_servo, -1.0, 1.0) * 400 + 1500) # [-1,1] -> [1100,1900]
     pi.set_servo_pulsewidth(gpio_servo, duty_cycle_servo)
+
+    duty_cycle_lift = 1750  # Valor fixo em 75% para manter o hovercraft no ar (ajustar para curvas depois, se quiser inflar menos)
+    pi.set_servo_pulsewidth(gpio_lift, duty_cycle_lift)
 
 if __name__ == "__main__":
     rospy.init_node("hover_pwm")
@@ -47,10 +52,10 @@ if __name__ == "__main__":
         global pwm_value_servo
         pwm_value_servo = msg.data
 
-    rospy.Subscriber("/pid/throttle", Float32, callback_pid_dist, queue_size=1)
-    rospy.Subscriber("/pid/servo", Float32, callback_pid_servo, queue_size=1)
+    rospy.Subscriber("/pid/distance", Float32, callback_pid_dist, queue_size=1)
+    rospy.Subscriber("/pid/angular", Float32, callback_pid_servo, queue_size=1)
 
-    rospy.Timer(rospy.Duration(0.02), pwm_loop)
+    rospy.Timer(rospy.Duration(0.002), pwm_loop)
 
     rospy.on_shutdown(pi.stop)
 

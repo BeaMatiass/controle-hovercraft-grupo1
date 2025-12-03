@@ -37,7 +37,6 @@ def funcao_callback(image):
     
     # Se houver objeto vermelho na tela, publica suas informações
     if(num_pixels > min_pixels): 
-
         if M['m00'] == 0:
             rospy.logwarn_throttle(5, "Máscara vermelha detectada, mas momentos inválidos (m00 == 0)")
             return
@@ -48,7 +47,6 @@ def funcao_callback(image):
 
         pub_distancia_x.publish(dx)
         pub_tamanho_atual.publish(tamanho_atual)
-
 
 if __name__ == '__main__':
     rospy.init_node("camera_gazebo")
