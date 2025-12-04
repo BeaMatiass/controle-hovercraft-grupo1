@@ -1,36 +1,44 @@
-import time
+import rospy
 
-class PIDController:
+class controle_pid:
     def __init__(self, kp, ki, kd, setpoint, upper_limit, lower_limit):
 
-        # PID gains
+        # Ganhos
         self.kp = kp
         self.ki = ki
         self.kd = kd
 
+        # Setpoint e limites de saída
         self.setpoint = setpoint
         self.upper_limit = upper_limit
         self.lower_limit = lower_limit
 
+        # Estados Internos
         self.integral = 0.0
         self.prev_error = None
         self.prev_time = None
-        self.last_output = None       
+        self.last_output = 0.0       
 
-    def compute_pid(self, current_distance):
-        current_time = time.time()
-
-        error = self.setpoint - current_distance
+    def processar_pid(self, current_value):
+        
+        # Tempo atual
+        agora = rospy.Time.now().to_sec()
+        
+        # erro = referencia - medida
+        error = self.setpoint - current_value
 
         # dt
         if self.prev_time is None:
             dt = 0.0
         else:
-            dt = current_time - self.prev_time
+            dt = agora - self.prev_time
+            if dt < 0:
+                dt = 0.0
         
-        self.prev_time = current_time
+        # Depois de calcular dt, atualiza tempo (agora -> previous)
+        self.prev_time = agora
 
-        # Derivative
+        # Derivada (calcula só se houver prev_error válido e dt > 0)
         if dt > 0.0 and self.prev_error is not None:
             derivative_action = (error - self.prev_error) / dt
         else:
@@ -42,16 +50,25 @@ class PIDController:
         else:
             new_integral = self.integral
 
+        # Saída não saturada (valor que o PID quer mandar sem considerar limitações físicas)
         unsaturated_output = (self.kp * error) + (self.ki * new_integral) + (self.kd * derivative_action)
 
+        # Saída saturada (força o valor insaturado para um intervalo seguro físicamente - segundo parâmetros informados antes)
         saturated_output = max(self.lower_limit, min(unsaturated_output, self.upper_limit))
 
-        if saturated_output == unsaturated_output:
+        # Condicional que só atualiza integral quando apropriado
+        if saturated_output == unsaturated_output: 
+            # Se não for saturado (não romper limite físico) -> aceita integral atualizado
             self.integral = new_integral
-        elif (saturated_output == self.upper_limit and error < 0) or (saturated_output == self.lower_limit and error > 0):
-            self.integral = new_integral
+        else:
+            # Se for saturado, permite atualizar a integral somente se o sinal ajudar a tirar saturação
+            if (saturated_output == self.upper_limit and error < 0) or (saturated_output == self.lower_limit and error > 0):
+                self.integral = new_integral
+            # Caso contrário, não atualiza
 
+        # Atualiza o histórico
         self.prev_error = error
         self.last_output = saturated_output
         
         return saturated_output
+    
