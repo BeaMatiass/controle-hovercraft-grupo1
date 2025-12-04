@@ -11,7 +11,7 @@ def main():
     pub = rospy.Publisher("/camera/rgb/image_raw", Image, queue_size=1)
     bridge = CvBridge()
 
-    cap = cv2.VideoCapture(2)  # Tenta abrir a webcam
+    cap = cv2.VideoCapture(3)  # Tenta abrir a webcam
 
     if not cap.isOpened():
         rospy.logerr("Não foi possível abrir a webcam!")
