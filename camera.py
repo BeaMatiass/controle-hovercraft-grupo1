@@ -48,8 +48,8 @@ def main():
         # Aplica a calibração usando a matriz de projeção P para o corte ideal
         frame_rectified = cv2.undistort(frame, K, D, None, P)
         
-        cv2.imshow("Webcam Retificada", frame_rectified)
-        cv2.waitKey(1) 
+        #cv2.imshow("Webcam Retificada", frame_rectified)
+        #cv2.waitKey(1) 
 
         # Publica imagem retificada no ROS
         img_msg = bridge.cv2_to_imgmsg(frame_rectified, encoding="bgr8")
