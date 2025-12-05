@@ -7,7 +7,7 @@ import sys
 
 gpio_throttle = 12
 gpio_lift = 13
-gpio_servo = 18
+gpio_servo = 26
 
 pwm_value_dist = 0.0
 pwm_value_servo = 0.0
@@ -27,7 +27,7 @@ def pwm_loop(_event):
     duty_cycle_throttle = int(clamp(pwm_value_dist, 0.0, 1.0) * 1000 + 1000)  # [0,1] -> [1000,2000]
     pi.set_servo_pulsewidth(gpio_throttle, duty_cycle_throttle)
 
-    duty_cycle_servo = int(clamp(pwm_value_servo, -1.0, 1.0) * 400 + 1500) # [-1,1] -> [1100,1900]
+    duty_cycle_servo = int(clamp(pwm_value_servo, -1.0, 1.0) * 500 + 1500) # [-1,1] -> [1100,1900]
     pi.set_servo_pulsewidth(gpio_servo, duty_cycle_servo)
 
     duty_cycle_lift = 1750  # Valor fixo em 75% para manter o hovercraft no ar (ajustar para curvas depois, se quiser inflar menos)
