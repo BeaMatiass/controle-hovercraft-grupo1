@@ -27,8 +27,14 @@ def funcao_callback(image):
 
     # Algoritmo reconhecimento pixels vermelhos
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    mask1 = cv2.inRange(hsv, (0, 150, 50), (10, 255, 255))
-    mask2 = cv2.inRange(hsv, (160, 150, 50), (179, 255, 255))
+    lower_red1 = np.array([0,   90,  90])
+    upper_red1 = np.array([10,  255, 255])
+
+    lower_red2 = np.array([170, 90,  90])
+    upper_red2 = np.array([179, 255, 255])
+
+    mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
+    mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
     mask = cv2.bitwise_or(mask1, mask2)
     M = cv2.moments(mask)
     
