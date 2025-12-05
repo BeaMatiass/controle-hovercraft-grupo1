@@ -55,7 +55,12 @@ if __name__ == "__main__":
     rospy.Subscriber("/pid/distance", Float32, callback_pid_dist, queue_size=1)
     rospy.Subscriber("/pid/angular", Float32, callback_pid_servo, queue_size=1)
 
-    rospy.Timer(rospy.Duration(0.002), pwm_loop)
+    pi.set_servo_pulsewidth(gpio_lift, 1000)
+    pi.set_servo_pulsewidth(gpio_throttle, 1000)
+    time.sleep(5)
+
+    pi.set_servo_pulsewidth(gpio_lift, 0)
+    pi.set_servo_pulsewidth(gpio_throttle, 0)
 
     rospy.on_shutdown(pi.stop)
 
