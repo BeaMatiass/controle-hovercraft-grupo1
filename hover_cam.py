@@ -3,7 +3,7 @@
 import rospy
 import cv2
 import numpy as np
-from math import asen
+from math import asin
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float32
 from cv_bridge import CvBridge
