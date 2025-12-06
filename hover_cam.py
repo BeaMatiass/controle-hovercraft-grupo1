@@ -33,7 +33,8 @@ def funcao_callback(image):
     M = cv2.moments(mask)
     
     height, width, _ = frame.shape 
-    min_pixels = height*width*0.005 # ajustar tanto mínimo de pixels
+    min_pixels = height*width*0.001
+     # ajustar tanto mínimo de pixels
     num_pixels = cv2.countNonZero(mask)
     
     # Se houver objeto vermelho na tela, publica suas informações
@@ -59,8 +60,7 @@ def funcao_callback(image):
 
         contorno_maior = max(contornos, key=cv2.contourArea)
         x, y, w, h = cv2.boundingRect(contorno_maior)
-
-        if h < 2: return
+        
 
         # determinar distância z e ângulo
         altura_pixels_objeto = float(h)
