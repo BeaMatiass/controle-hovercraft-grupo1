@@ -61,7 +61,7 @@ def controle_periodico(_event):
 
     # Alvo perdido
     if ultimo_tempo_visto == 0.0 or tempo_sem_objeto > 3.0:
-        pub_linear.publish(0.3)
+        pub_linear.publish(0.0)
         pub_angular.publish(0.3) # valores arbitrários (depois corrigir)
         return
 
