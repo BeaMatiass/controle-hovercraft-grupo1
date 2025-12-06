@@ -2,6 +2,7 @@
 
 import rospy
 import cv2
+import numpy as np
 from math import asen
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float32
@@ -72,7 +73,7 @@ def funcao_callback(image):
         distancia_focal = 582.7 # pixels
 
         distancia_z = altura_real_objeto * (distancia_focal / altura_pixels_objeto) # advém da semelhaça de triângulos
-        angulo_atual = asen(dx / distancia_z)
+        angulo_atual = asin(dx / distancia_z)
 
         pub_distancia_x.publish(dx_normalizado)
         pub_tamanho_atual.publish(tamanho_atual)
