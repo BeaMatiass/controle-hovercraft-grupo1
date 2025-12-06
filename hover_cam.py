@@ -77,7 +77,7 @@ def funcao_callback(image):
 
         distancia_z = altura_real_objeto * (distancia_focal / altura_pixels_objeto) # advém da semelhaça de triângulos
         
-        arg_asin = dx / distancia_focal if distancia_focal != 0 else 0
+        arg_asin = dx / distancia_focal 
         arg_asin = max(min(arg_asin, 1.0), -1.0)
         angulo_atual = asin(arg_asin)
         # angulo_atual = atan(dx / distancia_focal)
