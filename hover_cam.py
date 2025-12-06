@@ -2,6 +2,8 @@
 
 import rospy
 import cv2
+import numpy as np
+# from math import atan
 from math import asin
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float32
@@ -27,8 +29,14 @@ def funcao_callback(image):
 
     # Algoritmo reconhecimento pixels vermelhos
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    mask1 = cv2.inRange(hsv, (0, 150, 50), (10, 255, 255))
-    mask2 = cv2.inRange(hsv, (160, 150, 50), (179, 255, 255))
+    lower_red1 = np.array([0,   90,  90])
+    upper_red1 = np.array([10,  255, 255])
+
+    lower_red2 = np.array([170, 90,  90])
+    upper_red2 = np.array([179, 255, 255])
+
+    mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
+    mask2 = cv2.inRange(hsv, lower_red2, upper_red2)
     mask = cv2.bitwise_or(mask1, mask2)
     M = cv2.moments(mask)
     
@@ -72,6 +80,7 @@ def funcao_callback(image):
         arg_asin = dx / distancia_z if distancia_z != 0 else 0
         arg_asin = max(min(arg_asin, 1.0), -1.0)
         angulo_atual = asin(arg_asin)
+        # angulo_atual = atan(dx / distancia_focal)
 
         # --- VISUALIZAÇÃO ---
         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
