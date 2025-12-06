@@ -118,14 +118,14 @@ if __name__ == '__main__':
     )
 
     # Publishers
-    pub_linear = rospy.Publisher("/speed/acao_linear", Float32, queue_size=1)
-    pub_angular = rospy.Publisher("/speed/acao_angular", Float32, queue_size=1)
+    pub_linear = rospy.Publisher("/pid/distance", Float32, queue_size=1)
+    pub_angular = rospy.Publisher("/pid/angular", Float32, queue_size=1)
 
     # Subscribers
     rospy.Subscriber("/dados_da_camera/distancia_x", Float32, callback_dx)
     rospy.Subscriber("/dados_da_camera/angulo_atual", Float32, callback_angulo)
     rospy.Subscriber("/dados_da_camera/distancia_z", Float32, callback_z)
-    rospy.Subscriber("/mavros/local_position/velocity", TwistStamped, callback_mavros_vel)
+    rospy.Subscriber("/mavros/local_position/velocity", TwistStamped, callback_mavros_vel) # verificar se esse é o nome do tópico mesmo
 
     # Timer periódico
     rospy.Timer(rospy.Duration(0.1), controle_periodico)
