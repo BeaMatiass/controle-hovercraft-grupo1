@@ -14,6 +14,7 @@ dx = None
 tamanho_atual = None
 vel_angular_real = 0.0
 tamanho_capturado = 0.60 # ajustar depois
+
 ultimo_tempo_visto = 0.0
 
 def callback_dx(msg):
