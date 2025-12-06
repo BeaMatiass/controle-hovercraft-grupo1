@@ -16,13 +16,13 @@ angulo_atual = 0.0
 angulo_rad = 3.1415 * 0.2   # ~36 graus
 
 vel_angular_real = 0.0
-vel_angular_max = None    # determinar valor
+vel_angular_max = 1.0    # determinar valor
 
 vel_linear_real = 0.0
-vel_linear_max = None    # determinar valor
+vel_linear_max = 0.3    # determinar valor
 
 distancia_z = 0.0
-distancia_z_max = None    # determinar valor 
+distancia_z_max = 200.0    # determinar valor 
 
 # precisamos determinar pegando a maior distância reconhecível pela câmera
 # (mediante número de pixels) substraída de uma distância que consideraremos segura
@@ -67,7 +67,7 @@ def controle_periodico(_event):
 
     # -- AÇÃO LINEAR --
     frac = distancia_z / distancia_z_max
-    frac saturar(frac, 0.0, 1.0)
+    frac = saturar(frac, 0.0, 1.0)
 
     vel_linear_desejada = vel_linear_max * frac
     erro_vel_linear = vel_linear_desejada - vel_linear_real
@@ -114,8 +114,8 @@ if __name__ == '__main__':
     )
 
     # Publishers
-    pub_linear = rospy.Publisher("/speed/acao_linear", Float32, queue_size=1)
-    pub_angular = rospy.Publisher("/speed/acao_angular", Float32, queue_size=1)
+    pub_linear = rospy.Publisher("/pid/distance", Float32, queue_size=1)  
+    pub_angular = rospy.Publisher("/pid/angular", Float32, queue_size=1)
 
     # Subscribers
     rospy.Subscriber("/dados_da_camera/distancia_x", Float32, callback_dx)
