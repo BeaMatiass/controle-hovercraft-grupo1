@@ -64,16 +64,16 @@ def controle_periodico(_event):
         return
 
     # -- AÇÃO LINEAR --
-    if distancia_z > 40:
+    if distancia_z > 50:
         frac = distancia_z / distancia_z_max
         frac = saturar(frac, 0.0, 1.0)
     else:
         frac = 0
-
+    
     vel_linear_desejada = vel_linear_max * frac
     
-    pid_erro_linear.setpoint = vel_linear_desejada
-    comando_linear = pid_erro_linear.processar_pid(vel_linear_real)
+    pid_linear.setpoint = vel_linear_desejada
+    comando_linear = pid_linear.processar_pid(vel_linear_real)
     
     comando_linear = saturar(comando_linear, 0.0, 1.0) # depois será convertido para PWM
 
@@ -83,8 +83,8 @@ def controle_periodico(_event):
     erro_norm = saturar(angulo_atual / angulo_rad, -1.0, 1.0)
     vel_angular_desejada = vel_angular_max * erro_norm
 
-    pid_erro_angular.setpoint = vel_angular_desejada
-    comando_angular = pid_erro_angular.processar_pid(vel_angular_real)
+    pid_angular.setpoint = vel_angular_desejada
+    comando_angular = pid_angular.processar_pid(vel_angular_real)
 
     comando_angular = saturar(comando_angular, -1.0, 1.0)
 
@@ -93,7 +93,7 @@ def controle_periodico(_event):
 if __name__ == '__main__':
     rospy.init_node("hover_navigate")
 
-    pid_erro_linear = controle_pid(
+    pid_linear = controle_pid(
         kp = 0.1, 
         ki = 0.1, 
         kd = 0.05,
@@ -102,7 +102,7 @@ if __name__ == '__main__':
         upper_limit = 1.0
     )
     
-    pid_erro_angular = controle_pid(
+    pid_angular = controle_pid(
         kp = 0.4,
         ki = 0.1,
         kd = 0.05,
