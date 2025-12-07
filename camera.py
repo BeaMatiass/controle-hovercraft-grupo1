@@ -31,6 +31,7 @@ def main():
     
     bridge = CvBridge()
 
+    # Tente trocar o índice (0 ou 2) se o 3 não funcionar
     cap = cv2.VideoCapture(3)
 
     if not cap.isOpened():
@@ -45,13 +46,16 @@ def main():
             rospy.logwarn("Falha ao capturar frame!")
             continue
 
-        # Aplica a calibração usando a matriz de projeção P para o corte ideal
+        # 1. Aplica a calibração primeiro (importante ser antes do flip para manter a correção ótica certa)
         frame_rectified = cv2.undistort(frame, K, D, None, P)
         
-        #cv2.imshow("Webcam Retificada", frame_rectified)
-        #cv2.waitKey(1) 
+        # -1 = Inverter ambos (Girar 180°) -> IDEAL PARA CAMERA DE CABEÇA PRA BAIXO
+        frame_rectified = cv2.flip(frame_rectified, -1)
+        
+        cv2.imshow("Webcam Retificada", frame_rectified)
+        cv2.waitKey(1) 
 
-        # Publica imagem retificada no ROS
+        # Publica imagem retificada e invertida no ROS
         img_msg = bridge.cv2_to_imgmsg(frame_rectified, encoding="bgr8")
         pub.publish(img_msg)
 
