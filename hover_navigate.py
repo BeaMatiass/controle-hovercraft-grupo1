@@ -53,6 +53,8 @@ def controle_periodico(_event):
     global ultimo_tempo_visto
 
     if ultimo_tempo_visto is None:
+        pub_linear.publish(0.0)
+        pub_angular.publish(0.3) 
         return
 
     tempo_sem_objeto = (rospy.Time.now() - ultimo_tempo_visto).to_sec()
@@ -73,6 +75,7 @@ def controle_periodico(_event):
     vel_linear_desejada = vel_linear_max * frac
     
     pid_linear.setpoint = vel_linear_desejada
+    rospy.loginfo(vel_linear_desejada) # printar
     comando_linear = pid_linear.processar_pid(vel_linear_real)
     
     comando_linear = saturar(comando_linear, 0.0, 1.0) # depois será convertido para PWM
@@ -94,16 +97,16 @@ if __name__ == '__main__':
     rospy.init_node("hover_navigate")
 
     pid_linear = controle_pid(
-        kp = 0.1, 
-        ki = 0.1, 
-        kd = 0.05,
+        kp = 1.0, # kp foi aumentado, visto que na simulação a resposta costuma precisar de mais ganho direto
+        ki = 0.0, 
+        kd = 0.0,
         setpoint = 0.0, 
-        lower_limit = 0.0,
+        lower_limit = -1.0,
         upper_limit = 1.0
     )
     
     pid_angular = controle_pid(
-        kp = 0.4,
+        kp = 1.0,
         ki = 0.1,
         kd = 0.05,
         setpoint = 0.0,
