@@ -68,7 +68,6 @@ def funcao_callback(image):
 
         contorno_maior = max(contornos, key=cv2.contourArea)
         x, y, w, h = cv2.boundingRect(contorno_maior)
-        
 
         # determinar distância z e ângulo
         altura_pixels_objeto = float(h)
