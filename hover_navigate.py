@@ -75,7 +75,6 @@ def controle_periodico(_event):
     vel_linear_desejada = vel_linear_max * frac
     
     pid_linear.setpoint = vel_linear_desejada
-    rospy.loginfo(vel_linear_desejada) # printar
     comando_linear = pid_linear.processar_pid(vel_linear_real)
     
     comando_linear = saturar(comando_linear, 0.0, 1.0) # depois será convertido para PWM
@@ -92,6 +91,11 @@ def controle_periodico(_event):
     comando_angular = saturar(comando_angular, -1.0, 1.0)
 
     pub_angular.publish(comando_angular)
+
+    # Printar (para tunagem)
+
+    rospy.loginfo(f"[LIN] set={pid_linear.setpoint:.2f}  real={vel_linear_real:.2f}  cmd={comando_linear:.2f}")
+    rospy.loginfo(f"[ANG] set={pid_angular.setpoint:.2f}  real={vel_angular_real:.2f}  cmd={comando_angular:.2f}")
 
 if __name__ == '__main__':
     rospy.init_node("hover_navigate")
