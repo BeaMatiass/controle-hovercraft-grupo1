@@ -49,12 +49,6 @@ def main():
         # 1. Aplica a calibração primeiro (importante ser antes do flip para manter a correção ótica certa)
         frame_rectified = cv2.undistort(frame, K, D, None, P)
         
-        # 2. Inverte a imagem
-        # 0  = Inverter verticalmente (se quiser espelhado)
-        # 1  = Inverter horizontalmente
-        # -1 = Inverter ambos (Girar 180°) -> IDEAL PARA CAMERA DE CABEÇA PRA BAIXO
-        frame_rectified = cv2.flip(frame_rectified, -1)
-        
         cv2.imshow("Webcam Retificada", frame_rectified)
         cv2.waitKey(1) 
 

@@ -24,7 +24,7 @@ vel_linear_real = 0.0
 vel_linear_max = 0.5    # determinar valor
 
 distancia_z = 0.0
-distancia_z_max = 300.0    # determinar valor 
+distancia_z_max = 250.0    # 300 cm na vida real, usaremos 250 cm para garantir que ele vai parar corretamente 
 
 ultimo_tempo_visto = None
 
@@ -35,19 +35,14 @@ def callback_mavros_vel(msg):
     return
 
 def callback_angulo(msg):
-    global angulo_atual
+    global angulo_atual, ultimo_tempo_visto
     angulo_atual = msg.data
+    ultimo_tempo_visto = rospy.Time.now()
     return
 
 def callback_z(msg):
     global distancia_z
     distancia_z = msg.data
-    return
-
-def callback_dx(msg):
-    global ultimo_tempo_visto, dx_normalizado
-    dx_normalizado = msg.data
-    ultimo_tempo_visto = rospy.Time.now()
     return
 
 # Talvez não seja necessário dado o PID (analisar isso com calma)
@@ -58,6 +53,8 @@ def controle_periodico(_event):
     global ultimo_tempo_visto
 
     if ultimo_tempo_visto is None:
+        pub_linear.publish(0.0)
+        pub_angular.publish(0.3) 
         return
 
     tempo_sem_objeto = (rospy.Time.now() - ultimo_tempo_visto).to_sec()
@@ -65,19 +62,23 @@ def controle_periodico(_event):
     # Alvo perdido
     if tempo_sem_objeto > 3.0:
         pub_linear.publish(0.0)
-        pub_angular.publish(0.0) # valores arbitrários (depois corrigir)
+        pub_angular.publish(0.3) # valores arbitrários (depois corrigir)
         return
 
     # -- AÇÃO LINEAR --
-    frac = distancia_z / distancia_z_max
-    frac = saturar(frac, 0.0, 1.0)
-
+    if distancia_z > 50:
+        frac = distancia_z / distancia_z_max
+        frac = saturar(frac, 0.0, 1.0)
+    else:
+        frac = 0
+    
     vel_linear_desejada = vel_linear_max * frac
     
-    pid_erro_linear.setpoint = vel_linear_desejada
-    comando_linear = pid_erro_linear.processar_pid(vel_linear_real)
+    pid_linear.setpoint = vel_linear_desejada
+    rospy.loginfo(vel_linear_desejada) # printar
+    comando_linear = pid_linear.processar_pid(vel_linear_real)
     
-    comando_linear = saturar(comando_linear, -1.0, 1.0)
+    comando_linear = saturar(comando_linear, 0.0, 1.0) # depois será convertido para PWM
 
     pub_linear.publish(comando_linear)
 
@@ -85,8 +86,8 @@ def controle_periodico(_event):
     erro_norm = saturar(angulo_atual / angulo_rad, -1.0, 1.0)
     vel_angular_desejada = vel_angular_max * erro_norm
 
-    pid_erro_angular.setpoint = vel_angular_desejada
-    comando_angular = pid_erro_angular.processar_pid(vel_angular_real)
+    pid_angular.setpoint = vel_angular_desejada
+    comando_angular = pid_angular.processar_pid(vel_angular_real)
 
     comando_angular = saturar(comando_angular, -1.0, 1.0)
 
@@ -95,21 +96,17 @@ def controle_periodico(_event):
 if __name__ == '__main__':
     rospy.init_node("hover_navigate")
 
-    # mudei a lógica, agora não é mais tomando o "tamanho_capturado", mas a velocidade baseada na 
-    # distância (consideraremos uma distancia mínima segura sendo o zero de um eixo e, então, 
-    # pegaremos a distância máxima)
-
-    pid_erro_linear = controle_pid(
-        kp = 0.1, 
-        ki = 0.1, 
-        kd = 0.05,
+    pid_linear = controle_pid(
+        kp = 1.0, # kp foi aumentado, visto que na simulação a resposta costuma precisar de mais ganho direto
+        ki = 0.0, 
+        kd = 0.0,
         setpoint = 0.0, 
         lower_limit = -1.0,
         upper_limit = 1.0
     )
     
-    pid_erro_angular = controle_pid(
-        kp = 0.4,
+    pid_angular = controle_pid(
+        kp = 1.0,
         ki = 0.1,
         kd = 0.05,
         setpoint = 0.0,
@@ -122,7 +119,6 @@ if __name__ == '__main__':
     pub_angular = rospy.Publisher("/pid/angular", Float32, queue_size=1)
 
     # Subscribers
-    rospy.Subscriber("/dados_da_camera/distancia_x", Float32, callback_dx)
     rospy.Subscriber("/dados_da_camera/angulo_atual", Float32, callback_angulo)
     rospy.Subscriber("/dados_da_camera/distancia_z", Float32, callback_z)
     rospy.Subscriber("/mavros/local_position/velocity", TwistStamped, callback_mavros_vel) # verificar se esse é o nome do tópico mesmo
