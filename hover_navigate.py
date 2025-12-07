@@ -17,14 +17,14 @@ dx_normalizado = 0.0
 angulo_atual = 0.0
 angulo_rad = 3.1415 * 0.2   # ~36 graus
 
-vel_angular_real = 0.0
+vel_angular_real = None
 vel_angular_max = 1.0    # determinar valor
 
-vel_linear_real = 0.0
+vel_linear_real = None
 vel_linear_max = 0.5    # determinar valor
 
 distancia_z = 0.0
-distancia_z_max = 250.0    # 300 cm na vida real, usaremos 250 cm para garantir que ele vai parar corretamente 
+distancia_z_max = 250.0    # 250 cm na vida real, usaremos 250 cm para garantir que ele vai parar corretamente 
 
 ultimo_tempo_visto = None
 
@@ -53,16 +53,16 @@ def controle_periodico(_event):
     global ultimo_tempo_visto
 
     if ultimo_tempo_visto is None:
-        pub_linear.publish(0.0)
-        pub_angular.publish(0.3) 
+        pub_linear.publish(0.1)
+        pub_angular.publish(0.5) 
         return
 
     tempo_sem_objeto = (rospy.Time.now() - ultimo_tempo_visto).to_sec()
 
     # Alvo perdido
     if tempo_sem_objeto > 3.0:
-        pub_linear.publish(0.0)
-        pub_angular.publish(0.3) # valores arbitrários (depois corrigir)
+        pub_linear.publish(0.1)
+        pub_angular.publish(0.5) # valores arbitrários (depois corrigir)
         return
 
     # -- AÇÃO LINEAR --
