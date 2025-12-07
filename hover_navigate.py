@@ -31,7 +31,7 @@ ultimo_tempo_visto = None
 def callback_mavros_vel(msg):
     global vel_angular_real, vel_linear_real
     vel_angular_real = msg.twist.angular.z
-    vel_linear_real = msg.twist.linear.x
+    vel_linear_real = msg.twist.linear.y
     return
 
 def callback_angulo(msg):
