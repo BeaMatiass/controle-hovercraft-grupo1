@@ -29,10 +29,10 @@ def funcao_callback(image):
 
     # Algoritmo reconhecimento pixels vermelhos
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    lower_red1 = np.array([0,   90,  90])
+    lower_red1 = np.array([0,   70,  80])
     upper_red1 = np.array([10,  255, 255])
 
-    lower_red2 = np.array([170, 90,  90])
+    lower_red2 = np.array([170, 70,  80])
     upper_red2 = np.array([179, 255, 255])
 
     mask1 = cv2.inRange(hsv, lower_red1, upper_red1)
@@ -88,20 +88,27 @@ def funcao_callback(image):
         cv2.putText(frame, f"{distancia_z:.1f} cm", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
         # --------------------
 
+        mask_msg = bridge.cv2_to_imgmsg(mask, encoding="mono8")
+        frame_msg = bridge.cv2_to_imgmsg(frame, encoding="bgr8")
+
+        pub_mascara.publish(mask_msg)
+        pub_visao.publish(frame_msg)
         pub_distancia_x.publish(dx_normalizado)
         pub_tamanho_atual.publish(tamanho_atual)
         pub_angulo.publish(angulo_atual)
         pub_distancia_z.publish(distancia_z)
 
     # VISUALIZAÇÃO (Fora do if para ver a câmera sempre)
-    cv2.imshow("Mascara", mask)
-    cv2.imshow("Visao Final", frame)
-    cv2.waitKey(1)
+    # cv2.imshow("Mascara", mask)
+    # cv2.imshow("Visao Final", frame)
+    # cv2.waitKey(1)
 
 if __name__ == '__main__':
     rospy.init_node("hover_cam")
 
     # Publishers
+    pub_mascara = rospy.Publisher("/camera/mask", Image, queue_size=1)
+    pub_visao = rospy.Publisher("/camera/visao", Image, queue_size=1)
     pub_distancia_x = rospy.Publisher("/dados_da_camera/distancia_x", Float32, queue_size=1)
     pub_tamanho_atual = rospy.Publisher("/dados_da_camera/tamanho_atual", Float32, queue_size=1)
     pub_angulo = rospy.Publisher("/dados_da_camera/angulo_atual", Float32, queue_size=1)
